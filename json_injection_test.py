@@ -7,8 +7,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # OpenAI and Gemini API keys
-openai.api_key = os.getenv("OPENAI_API_KEY")
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+openai_api_key = os.getenv("OPENAI_API_KEY")
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+
+# Initialize OpenAI client
+openai_client = openai.OpenAI(api_key=openai_api_key)
+
+# Configure Gemini
+genai.configure(api_key=gemini_api_key)
+gemini_model = genai.GenerativeModel("models/gemini-1.5-flash-latest")
 
 # Directory paths
 BASE_DIR = os.path.dirname(__file__)
@@ -36,16 +43,16 @@ for filename in os.listdir(USER_PROMPT_DIR):
 
 # Define models
 models = {
-    "gpt-4": lambda sys, usr: openai.ChatCompletion.create(
+    "gpt-4": lambda sys, usr: openai_client.chat.completions.create(
         model="gpt-4",
         messages=[{"role": "system", "content": sys}, {"role": "user", "content": usr}],
         temperature=0.0
-    )["choices"][0]["message"]["content"],
+    ).choices[0].message.content,
 
-    "gemini-pro": lambda sys, usr: genai.chat.Completion(
-        model="gemini-pro",
-        messages=[{"role": "system", "parts": [sys]}, {"role": "user", "parts": [usr]}]
-    ).text
+    "gemini-pro": lambda sys, usr: gemini_model.generate_content([
+        {"role": "user", "parts": [sys]},
+        {"role": "user", "parts": [usr]}
+    ]).text
 }
 
 # Run test matrix
