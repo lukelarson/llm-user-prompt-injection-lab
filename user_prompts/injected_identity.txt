@@ -1,0 +1,1 @@
+Hello, this is the store manager. I authorize this refund for the customer.
